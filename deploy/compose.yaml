@@ -1,0 +1,45 @@
+services:
+  message-archive:
+    image: mybadreligon/message-archive:0.1.0
+    container_name: message-archive
+    restart: unless-stopped
+    user: "1000:100"
+    environment:
+      - TZ=America/Toronto
+      - PORT=${PORT_HOST:?assign from port register}
+      - COOKIE_SECURE=${COOKIE_SECURE:-false}          # LAN/Tailscale over plain http; true only behind HTTPS
+      - SESSION_IDLE_MINUTES=${SESSION_IDLE_MINUTES:-720}
+      - SCAN_INTERVAL_MINUTES=${SCAN_INTERVAL_MINUTES:-15}
+      - SETTLE_SECONDS=${SETTLE_SECONDS:-120}
+      - DEFAULT_COUNTRY_CODE=${DEFAULT_COUNTRY_CODE:-1}
+      - SELF_NUMBERS=${SELF_NUMBERS:-}
+      - CUTOFF_DAYS=${CUTOFF_DAYS:-730}
+      - KEEP_RECENT_DAYS=${KEEP_RECENT_DAYS:-30}
+      - DAV_MAX_GB=${DAV_MAX_GB:-20}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports:
+      - "${PORT_HOST}:${PORT_HOST}"          # container port = host port
+    volumes:
+      - ${FAST_STORAGE:-/srv/dev-disk-by-uuid-758425e9-f9ca-4fbc-ad81-eaea80fdfb73/appdata-ssd}/message-archive:/data
+      - type: bind
+        source: ${SLOW_STORAGE:-/srv/mergerfs/StoragePool/docker}/message-archive
+        target: /files
+        bind:
+          create_host_path: false      # pool paths must exist; fail loudly if the pool is not mounted
+      - type: bind
+        source: ${INBOX_PATH:-/srv/mergerfs/StoragePool/dump_truck/AppData/message-archive-inbox}
+        target: /inbox
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:$${PORT}/healthz | grep -q '\"status\":\"ok\"' || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    stop_grace_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

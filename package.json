@@ -1,0 +1,25 @@
+{
+  "name": "message-archive",
+  "version": "0.1.0",
+  "description": "Self-hosted archive and viewer for Android SMS/MMS/RCS backups",
+  "private": true,
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "demo": "node scripts/make-demo.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "express": "^4.22.3",
+    "saxes": "^6.0.0",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "yazl": "^3.3.1"
+  }
+}
